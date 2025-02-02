@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useCallback, useRef } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react"
 import {
   type Node,
   type Edge,
@@ -151,7 +151,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               y: isNaN(position.y) ? 0 : Math.round(position.y),
             }
           : { x: 0, y: 0 },
-        data: { label: `New ${type}` },
+        data: {
+          label: `New ${type}`,
+          description: `Description for new ${type}`,
+          status: "pending",
+        },
       }
 
       if (reactFlowInstance) {
@@ -248,6 +252,25 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [addToHistory],
   )
 
+  const handleKeyDown = useCallback((event: KeyboardEvent) => {
+    if ((event.key === "Delete" || event.key === "Backspace")) {
+      // Only delete if we're not in an input field
+      const activeElement = document.activeElement
+      const isInputField = activeElement instanceof HTMLInputElement || 
+                          activeElement instanceof HTMLTextAreaElement ||
+                          activeElement instanceof HTMLSelectElement
+      
+      if (!isInputField && selectedNode && !isEditing) {
+        deleteNode(selectedNode.id)
+      }
+    }
+  }, [selectedNode, deleteNode, isEditing])
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [handleKeyDown])
+
   return (
     <WorkflowContext.Provider
       value={{
@@ -277,3 +300,4 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     </WorkflowContext.Provider>
   )
 }
+

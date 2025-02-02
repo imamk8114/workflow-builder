@@ -1,10 +1,11 @@
 "use client"
 
 import type React from "react"
-import { useCallback, useRef, useEffect } from "react"
+import { useCallback, useRef } from "react"
 import ReactFlow, { Background, Controls, MiniMap, type NodeTypes, type Node, type Edge } from "reactflow"
 import "reactflow/dist/style.css"
 import { useWorkflow } from "../contexts/WorkflowContext"
+import { useTheme } from "../contexts/ThemeContext"
 import TaskNode from "./nodes/TaskNode"
 import ConditionNode from "./nodes/ConditionNode"
 import NotificationNode from "./nodes/NotificationNode"
@@ -30,15 +31,7 @@ const WorkflowCanvas: React.FC = () => {
     isEditing,
   } = useWorkflow()
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
-
-  const onNodeDoubleClick = useCallback(
-    (event: React.MouseEvent, node: Node) => {
-      if (!isEditing) {
-        deleteNode(node.id)
-      }
-    },
-    [deleteNode, isEditing],
-  )
+  const { theme } = useTheme()
 
   const onEdgeDoubleClick = useCallback(
     (event: React.MouseEvent, edge: Edge) => {
@@ -55,19 +48,6 @@ const WorkflowCanvas: React.FC = () => {
     },
   }))
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if ((event.key === "Delete") && !isEditing) {
-        if (selectedNode) {
-          deleteNode(selectedNode.id)
-        }
-      }
-    }
-
-    window.addEventListener("keydown", handleKeyDown)
-    return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [selectedNode, deleteNode, isEditing])
-
   return (
     <div ref={reactFlowWrapper} style={{ width: "100%", height: "100%" }}>
       <ReactFlow
@@ -77,16 +57,29 @@ const WorkflowCanvas: React.FC = () => {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={(_, node) => setSelectedNode(node)}
-        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeDoubleClick={onEdgeDoubleClick}
         onPaneClick={() => setSelectedNode(null)}
         nodeTypes={nodeTypes}
         onInit={setReactFlowInstance}
         fitView
+        className={`bg-gray-100 dark:bg-[#0A0A0A] ${theme === "dark" ? "dark" : ""}`}
+        defaultEdgeOptions={{
+          style: { stroke: theme === "dark" ? "#4F46E5" : "#3730A3" },
+          type: "smoothstep",
+        }}
       >
-        <Controls />
-        <MiniMap />
-        <Background gap={12} size={1} />
+        <Controls className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800" />
+        <MiniMap
+          className="bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800"
+          nodeColor={theme === "dark" ? "#4F46E5" : "#3730A3"}
+          maskColor={theme === "dark" ? "rgba(0, 0, 0, 0.7)" : "rgba(240, 240, 240, 0.7)"}
+        />
+        <Background
+          color={theme === "dark" ? "#1F2937" : "#E5E7EB"}
+          gap={16}
+          size={1}
+          className="bg-gray-100 dark:bg-[#0A0A0A]"
+        />
       </ReactFlow>
     </div>
   )

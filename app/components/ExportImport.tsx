@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useWorkflow } from "../contexts/WorkflowContext"
+import { Download, Upload } from "lucide-react"
 
 const ExportImport: React.FC = () => {
   const { exportWorkflow, importWorkflow } = useWorkflow()
@@ -35,12 +36,16 @@ const ExportImport: React.FC = () => {
     <div className="flex space-x-2">
       <button
         onClick={handleExport}
-        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+        className="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-colors"
+        title="Export Workflow"
       >
-        Export
+        <Download size={20} />
       </button>
-      <label className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 cursor-pointer text-sm">
-        Import
+      <label
+        className="p-2 rounded-full bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 cursor-pointer transition-colors"
+        title="Import Workflow"
+      >
+        <Upload size={20} />
         <input type="file" onChange={handleImport} className="hidden" accept=".json" />
       </label>
     </div>
@@ -48,4 +53,3 @@ const ExportImport: React.FC = () => {
 }
 
 export default ExportImport
-

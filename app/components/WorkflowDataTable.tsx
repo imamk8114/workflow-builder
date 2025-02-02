@@ -29,19 +29,10 @@ const WorkflowDataTable: React.FC = () => {
           editingId === row.original.id ? (
             <input
               value={value}
-              onChange={(e) => {
-                const newValue = e.target.value
-                updateNode(row.original.id, { label: newValue })
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  setEditingId(null)
-                }
-                e.stopPropagation()
-              }}
-              onBlur={() => setEditingId(null)}
+              onChange={(e) => updateNode(row.original.id, { label: e.target.value })}
+              onBlur={(e) => handleBlur(row.original.id, e.target.value)}
               autoFocus
-              className="w-full p-1 border rounded text-sm bg-white"
+              className="w-full p-1 border rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
             />
           ) : (
             <div onClick={() => setEditingId(row.original.id)} className="cursor-pointer p-1">
@@ -56,7 +47,7 @@ const WorkflowDataTable: React.FC = () => {
           <select
             value={row.original.data.status || "pending"}
             onChange={(e) => updateNode(row.original.id, { status: e.target.value })}
-            className="w-full p-1 border rounded text-sm bg-white"
+            className="w-full p-1 border rounded text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-gray-300 dark:border-gray-700"
           >
             <option value="pending">Pending</option>
             <option value="in-progress">In Progress</option>
@@ -82,16 +73,16 @@ const WorkflowDataTable: React.FC = () => {
   const { getTableProps, getTableBodyProps, headerGroups, rows, prepareRow } = useTable({ columns, data: nodes })
 
   return (
-    <div className="overflow-x-auto">
-      <table {...getTableProps()} className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
+    <div>
+      <table {...getTableProps()} className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+        <thead className="bg-gray-50 dark:bg-gray-800">
           {headerGroups.map((headerGroup) => (
             <tr {...headerGroup.getHeaderGroupProps()} key={headerGroup.id}>
               {headerGroup.headers.map((column) => (
                 <th
                   {...column.getHeaderProps()}
                   key={column.id}
-                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
                   style={{ width: column.Header === "Type" ? "20%" : column.Header === "Actions" ? "15%" : "32.5%" }}
                 >
                   {column.render("Header")}
@@ -100,7 +91,10 @@ const WorkflowDataTable: React.FC = () => {
             </tr>
           ))}
         </thead>
-        <tbody {...getTableBodyProps()} className="bg-white divide-y divide-gray-200">
+        <tbody
+          {...getTableBodyProps()}
+          className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700"
+        >
           {rows.map((row) => {
             prepareRow(row)
             return (
@@ -120,4 +114,3 @@ const WorkflowDataTable: React.FC = () => {
 }
 
 export default WorkflowDataTable
-
