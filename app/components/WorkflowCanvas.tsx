@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useCallback, useRef } from "react"
+import { useCallback, useRef, useEffect } from "react"
 import ReactFlow, { Background, Controls, MiniMap, type NodeTypes, type Node, type Edge } from "reactflow"
 import "reactflow/dist/style.css"
 import { useWorkflow } from "../contexts/WorkflowContext"
@@ -9,26 +9,35 @@ import TaskNode from "./nodes/TaskNode"
 import ConditionNode from "./nodes/ConditionNode"
 import NotificationNode from "./nodes/NotificationNode"
 
-type WorkflowCanvasProps = {
-  onNodeSelect: (node: Node | null) => void
-}
-
 const nodeTypes: NodeTypes = {
   task: TaskNode,
   condition: ConditionNode,
   notification: NotificationNode,
 }
 
-const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ onNodeSelect }) => {
-  const { nodes, edges, onNodesChange, onEdgesChange, onConnect, deleteNode, deleteEdge, setReactFlowInstance } =
-    useWorkflow()
+const WorkflowCanvas: React.FC = () => {
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    deleteNode,
+    deleteEdge,
+    setReactFlowInstance,
+    setSelectedNode,
+    selectedNode,
+    isEditing,
+  } = useWorkflow()
   const reactFlowWrapper = useRef<HTMLDivElement>(null)
 
   const onNodeDoubleClick = useCallback(
     (event: React.MouseEvent, node: Node) => {
-      deleteNode(node.id)
+      if (!isEditing) {
+        deleteNode(node.id)
+      }
     },
-    [deleteNode],
+    [deleteNode, isEditing],
   )
 
   const onEdgeDoubleClick = useCallback(
@@ -46,6 +55,19 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ onNodeSelect }) => {
     },
   }))
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.key === "Delete") && !isEditing) {
+        if (selectedNode) {
+          deleteNode(selectedNode.id)
+        }
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [selectedNode, deleteNode, isEditing])
+
   return (
     <div ref={reactFlowWrapper} style={{ width: "100%", height: "100%" }}>
       <ReactFlow
@@ -54,9 +76,10 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ onNodeSelect }) => {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeClick={(_, node) => onNodeSelect(node)}
+        onNodeClick={(_, node) => setSelectedNode(node)}
         onNodeDoubleClick={onNodeDoubleClick}
         onEdgeDoubleClick={onEdgeDoubleClick}
+        onPaneClick={() => setSelectedNode(null)}
         nodeTypes={nodeTypes}
         onInit={setReactFlowInstance}
         fitView
@@ -70,4 +93,3 @@ const WorkflowCanvas: React.FC<WorkflowCanvasProps> = ({ onNodeSelect }) => {
 }
 
 export default WorkflowCanvas
-

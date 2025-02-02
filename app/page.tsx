@@ -1,7 +1,4 @@
 "use client"
-
-import { useState } from "react"
-import type { Node } from "reactflow"
 import { WorkflowProvider } from "./contexts/WorkflowContext"
 import WorkflowCanvas from "./components/WorkflowCanvas"
 import NodeConfigPanel from "./components/NodeConfigPanel"
@@ -11,11 +8,11 @@ import ExportImport from "./components/ExportImport"
 import AddNodePanel from "./components/AddNodePanel"
 
 export default function Home() {
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  // const [selectedNode, setSelectedNode] = useState<Node | null>(null)
 
-  const handleNodeSelect = (node: Node | null) => {
-    setSelectedNode(node ? { ...node } : null)
-  }
+  // const handleNodeSelect = (node: Node | null) => {
+  //   setSelectedNode(node ? { ...node } : null)
+  // }
 
   return (
     <WorkflowProvider>
@@ -35,16 +32,12 @@ export default function Home() {
               <AddNodePanel />
             </div>
             <div className="bg-white shadow rounded-lg p-4" style={{ height: "calc(100vh - 300px)" }}>
-              <WorkflowCanvas onNodeSelect={handleNodeSelect} />
+              <WorkflowCanvas />
             </div>
           </div>
           <div className="w-full lg:w-1/3 p-4">
             <div className="bg-white shadow rounded-lg p-4 mb-4">
-              {selectedNode ? (
-                <NodeConfigPanel node={selectedNode} />
-              ) : (
-                <p className="text-gray-500 italic">Select a node to configure</p>
-              )}
+              <NodeConfigPanel />
             </div>
             <div className="bg-white shadow rounded-lg p-4">
               <WorkflowDataTable />
@@ -55,4 +48,3 @@ export default function Home() {
     </WorkflowProvider>
   )
 }
-

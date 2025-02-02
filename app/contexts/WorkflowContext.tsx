@@ -11,6 +11,7 @@ import {
   type OnConnect,
   applyNodeChanges,
   applyEdgeChanges,
+  type Connection,
 } from "reactflow"
 import type { ReactFlowInstance } from "reactflow"
 
@@ -36,6 +37,10 @@ type WorkflowContextType = {
   exportWorkflow: () => string
   importWorkflow: (jsonString: string) => void
   setReactFlowInstance: React.Dispatch<React.SetStateAction<ReactFlowInstance | null>>
+  selectedNode: Node | null
+  setSelectedNode: React.Dispatch<React.SetStateAction<Node | null>>
+  isEditing: boolean
+  setIsEditing: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const WorkflowContext = createContext<WorkflowContextType | undefined>(undefined)
@@ -51,9 +56,15 @@ export const useWorkflow = () => {
 export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const setSelectedNodeAndResetEditing = useCallback((node: Node | null) => {
+    setSelectedNode(node)
+    setIsEditing(false)
+  }, [])
   const historyRef = useRef<WorkflowState[]>([{ nodes: [], edges: [] }])
   const historyIndexRef = useRef(0)
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
 
   const addToHistory = useCallback((newNodes: Node[], newEdges: Edge[]) => {
     const newHistory = historyRef.current.slice(0, historyIndexRef.current + 1)
@@ -90,15 +101,43 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     [nodes, addToHistory],
   )
 
+  const isValidConnection = useCallback(
+    (connection: Connection) => {
+      const sourceNode = nodes.find((node) => node.id === connection.source)
+      const targetNode = nodes.find((node) => node.id === connection.target)
+
+      if (!sourceNode || !targetNode) return false
+
+      // Prevent self-connections
+      if (sourceNode.id === targetNode.id) return false
+
+      // Prevent connections to 'task' nodes
+      if (targetNode.type === "task") return false
+
+      // Allow connections from 'condition' nodes to any other node
+      if (sourceNode.type === "condition") return true
+
+      // Allow connections from 'task' and 'notification' nodes to 'condition' nodes
+      if ((sourceNode.type === "task" || sourceNode.type === "notification") && targetNode.type === "condition")
+        return true
+
+      // Disallow all other connections
+      return false
+    },
+    [nodes],
+  )
+
   const onConnect: OnConnect = useCallback(
     (connection) => {
-      setEdges((eds) => {
-        const newEdges = addEdge(connection, eds)
-        addToHistory(nodes, newEdges)
-        return newEdges
-      })
+      if (isValidConnection(connection)) {
+        setEdges((eds) => {
+          const newEdges = addEdge(connection, eds)
+          addToHistory(nodes, newEdges)
+          return newEdges
+        })
+      }
     },
-    [nodes, addToHistory],
+    [isValidConnection, nodes, addToHistory],
   )
 
   const addNode = useCallback(
@@ -155,10 +194,11 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           addToHistory(newNodes, newEdges)
           return newEdges
         })
+        setSelectedNodeAndResetEditing(null)
         return newNodes
       })
     },
-    [addToHistory],
+    [addToHistory, setSelectedNodeAndResetEditing],
   )
 
   const deleteEdge = useCallback(
@@ -176,12 +216,8 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (historyIndexRef.current > 0) {
       historyIndexRef.current -= 1
       const prevState = historyRef.current[historyIndexRef.current]
-      console.log("Undoing to state:", prevState)
       setNodes([...prevState.nodes])
       setEdges([...prevState.edges])
-      console.log("New state after undo:", { nodes: prevState.nodes, edges: prevState.edges })
-    } else {
-      console.log("Cannot undo: at oldest state")
     }
   }, [])
 
@@ -231,10 +267,13 @@ export const WorkflowProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         exportWorkflow,
         importWorkflow,
         setReactFlowInstance,
+        selectedNode,
+        setSelectedNode: setSelectedNodeAndResetEditing,
+        isEditing,
+        setIsEditing,
       }}
     >
       {children}
     </WorkflowContext.Provider>
   )
 }
-

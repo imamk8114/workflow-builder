@@ -29,8 +29,17 @@ const WorkflowDataTable: React.FC = () => {
           editingId === row.original.id ? (
             <input
               value={value}
-              onChange={(e) => updateNode(row.original.id, { label: e.target.value })}
-              onBlur={(e) => handleBlur(row.original.id, e.target.value)}
+              onChange={(e) => {
+                const newValue = e.target.value
+                updateNode(row.original.id, { label: newValue })
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setEditingId(null)
+                }
+                e.stopPropagation()
+              }}
+              onBlur={() => setEditingId(null)}
               autoFocus
               className="w-full p-1 border rounded text-sm bg-white"
             />
